@@ -1,8 +1,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "murmur3.h"
 #include <math.h>
+
+static long djb2(char* str, int hashtableSize) { 
+    long hash = 5381; 
+    for (int i = 0; i < strlen(str); i++) { 
+        hash = ((hash << 5) + hash) + str[i]; 
+    } 
+    return abs(hash) % hashtableSize; 
+}
+
+static long sdbm(char* str, int hashtableSize) { 
+    long hash = 0; 
+    for (int i = 0; i < strlen(str); i++) { 
+        hash = str[i] + (hash << 6) + (hash << 16) - hash; 
+    } 
+    return abs(hash) % (hashtableSize - 1) + 1; 
+} 
 
 struct bloomFilter
 {
@@ -34,15 +49,15 @@ bFilter newBloomFilter(float fp, int exp_n){
     return b;
 }
 
-uint32_t hashing(char* s, int seed){
-    uint32_t hash[4];
-    MurmurHash3_x86_32(s,strlen(s),seed,hash);
-    return hash[0];
+long hashing(char* s, int size, int seed){
+    long index =(long) (djb2(s,size) + seed*sdbm(s,size));
+    return index;
 }
 
 void insert(char* s, bFilter b){
     for(int i=0;i<b->hash_count;i++){
-        int hash = (hashing(s,i) % b->size);
+        long hash = hashing(s,b->size,(i+1)); 
+        hash = hash% b->size;
         b->arr[hash]=1;
     }
     b->count++;
@@ -50,7 +65,8 @@ void insert(char* s, bFilter b){
 
 int has(char* s, bFilter b){
     for(int i=0;i<b->hash_count;i++){
-        int hash = hashing(s,i) % b->size;
+        long hash = hashing(s,b->size,(i+1));
+        hash = hash % b->size;
         if(b->arr[hash]==0){
             return 0;
         }

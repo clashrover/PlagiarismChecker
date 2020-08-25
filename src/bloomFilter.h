@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "murmur3.h"
 
 struct bloomFilter;
 typedef struct bloomFilter* bFilter;
 
 bFilter newBloomFilter(float fp, int exp_n);
 
-uint32_t hashing(char* s, int seed);
+long hashing(char* s,int tablesize, int seed);
 
 void insert(char* s, bFilter b);
 

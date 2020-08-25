@@ -1592,6 +1592,7 @@ int main(int argc, char *argv[]){
 
     for(int i=0;i<k;i++){
         float f = 100*cosine_sim(arr[i],arr[j]);
+        f = (f>100)?100:f;
         printf("%s %f\n", doc[i],f);
     }
 
